@@ -1,0 +1,11 @@
+{
+    "manifest_version": 3,
+    "name" : "Prompt Reviewer",
+    "version" : "1.0.0",
+    "description" : "Tracked changes review for your prompt. Works on the text boxes of supported chatbots.",
+    "permisions" : ["storage", "activeTab", "scripting"],
+    "host_permissions": [
+        "https://generativelanguage.googleapis.com/*"
+    ]
+    
+}
