@@ -1,11 +1,52 @@
 {
-    "manifest_version": 3,
-    "name" : "Prompt Reviewer",
-    "version" : "1.0.0",
-    "description" : "Tracked changes review for your prompt. Works on the text boxes of supported chatbots.",
-    "permisions" : ["storage", "activeTab", "scripting"],
-    "host_permissions": [
-        "https://generativelanguage.googleapis.com/*"
-    ]
-    
+  "manifest_version": 3,
+  "name": "Prompt Review",
+  "version": "1.0.0",
+  "description": "Tracked-changes review for your prompt. Works on the text boxes of supported chatbot sites (best effort) and shows every change before you accept it.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://integrate.api.nvidia.com/*",
+    "http://localhost:*/*",
+    "http://127.0.0.1:*/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Suggest a shorter prompt (Alt+Shift+R)"
+  },
+  "options_page": "options.html",
+  "commands": {
+    "review-prompt": {
+      "suggested_key": {
+        "default": "Alt+Shift+R"
+      },
+      "description": "Review the prompt in the chat box"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://copilot.microsoft.com/*",
+        "https://www.perplexity.ai/*",
+        "https://grok.com/*",
+        "https://chat.deepseek.com/*",
+        "https://chat.mistral.ai/*",
+        "https://poe.com/*"
+      ],
+      "js": [
+        "shared.js",
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
 }
