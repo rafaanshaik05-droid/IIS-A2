@@ -1,0 +1,114 @@
+[
+  {
+    "id": "c01", "category": "polite padding", "expect": "trim",
+    "text": "Hi there! I hope you're doing well. I was just wondering if you could possibly explain to me, in simple terms, how photosynthesis works? It would be really great if you could keep it under 100 words, thank you so much in advance!",
+    "must_keep": ["photosynthesis", "simple", "100 words"],
+    "checks": [{ "type": "maxWords", "value": 100 }, { "type": "contains", "value": "light" }],
+    "rubric": "Explains photosynthesis correctly in plain words."
+  },
+  {
+    "id": "c02", "category": "numbers and names", "expect": "trim",
+    "text": "Can you please write me a formal email to my landlord, Mr. Patel, about the broken heater in flat 12B? It has been broken since 3 March and I want it fixed within 7 days. Please make sure the email is formal and polite. Please don't threaten legal action.",
+    "must_keep": ["Mr. Patel", "12B", "3 March", "7 days", "don't threaten legal action"],
+    "checks": [{ "type": "contains", "value": "Patel" }, { "type": "contains", "value": "12B" }, { "type": "contains", "value": "3 March" }, { "type": "contains", "value": "7 days" }, { "type": "notContains", "value": "legal" }],
+    "rubric": "Formal, polite email with the deadline and no threat."
+  },
+  {
+    "id": "c03", "category": "negation, longer text", "expect": "none",
+    "text": "Summarise the following paragraph in three bullet points. Do not include any statistics and do not use the word 'significant'.\n\nParagraph: Many companies now let staff work from home. Supporters say it saves commuting time and helps people focus, while critics worry that teams lose the casual conversations that spark new ideas. Managers say results depend on clear goals and regular check-ins.",
+    "must_keep": ["three bullet", "statistics", "significant", "Paragraph:"],
+    "checks": [{ "type": "listCount", "value": 3 }, { "type": "notMatch", "value": "\\d" }, { "type": "notMatch", "value": "significant", "flags": "i" }],
+    "rubric": "Three accurate bullets that cover the paragraph."
+  },
+  {
+    "id": "c04", "category": "repeated constraint", "expect": "trim",
+    "text": "Write a short story about a dragon who learns to bake. The story should be short. Make it around 200 words. It should be 200 words or so, not much longer. The tone should be warm and funny.",
+    "must_keep": ["dragon", "bake", "200 words", "warm", "funny"],
+    "checks": [{ "type": "minWords", "value": 140 }, { "type": "maxWords", "value": 260 }, { "type": "contains", "value": "dragon" }, { "type": "contains", "value": "bak" }],
+    "rubric": "Warm, funny, coherent story of about 200 words."
+  },
+  {
+    "id": "c05", "category": "quoted text", "expect": "trim",
+    "text": "Translate \"Where is the nearest train station?\" into French and Spanish. I would really appreciate it if you could also tell me which one is more formal, if that is not too much trouble.",
+    "must_keep": ["\"Where is the nearest train station?\"", "French", "Spanish", "formal"],
+    "checks": [{ "type": "contains", "value": "gare" }, { "type": "contains", "value": "estaci" }, { "type": "contains", "value": "formal" }],
+    "rubric": "Both translations are correct and it says which is more formal."
+  },
+  {
+    "id": "c06", "category": "already concise", "expect": "none",
+    "text": "List five healthy breakfast ideas under 400 calories each.",
+    "must_keep": ["five", "breakfast", "400 calories"],
+    "checks": [{ "type": "listCount", "value": 5 }],
+    "rubric": "Five distinct breakfasts, each plausibly under 400 calories."
+  },
+  {
+    "id": "c07", "category": "unclear request", "expect": "unclear",
+    "text": "Make it better and more professional. Thanks!",
+    "must_keep": ["professional"],
+    "checks": [],
+    "rubric": "Asks for the text or says it is missing. Does not invent content."
+  },
+  {
+    "id": "c08", "category": "rambling context", "expect": "trim",
+    "text": "So basically I'm a second-year university student and I have an essay due next week, and I've been really stressed about it, and what I need is a clear outline for a 1500-word essay on the causes of the First World War, with an intro, three main body sections and a conclusion. I don't need the full essay, just the outline.",
+    "must_keep": ["1500", "First World War", "three main body sections", "outline"],
+    "checks": [{ "type": "contains", "value": "conclusion" }, { "type": "maxWords", "value": 450 }],
+    "rubric": "Outline only: intro, three body sections, conclusion, on the causes of the First World War."
+  },
+  {
+    "id": "c09", "category": "code and tone", "expect": "trim",
+    "text": "Explain what this Python line does: `[x**2 for x in range(10) if x % 2 == 0]`. Please explain it like I'm a beginner and please don't use jargon, I really am a total beginner.",
+    "must_keep": ["`[x**2 for x in range(10) if x % 2 == 0]`", "beginner", "jargon"],
+    "checks": [{ "type": "notContains", "value": "list comprehension" }, { "type": "contains", "value": "even" }],
+    "rubric": "Correct, beginner-friendly explanation: even numbers from 0 to 9, squared."
+  },
+  {
+    "id": "c10", "category": "restrictive 'only'", "expect": "trim",
+    "text": "Recommend some books for me to read on holiday. Only fiction, nothing too long, ideally under 400 pages, and I really love mysteries, but only older ones, from before 1990.",
+    "must_keep": ["fiction", "400 pages", "mysteries", "1990"],
+    "checks": [{ "type": "notMatch", "value": "\\b(199\\d|20\\d\\d)\\b" }],
+    "rubric": "Mystery novels, fiction, published before 1990, under about 400 pages."
+  },
+  {
+    "id": "c11", "category": "repeated not", "expect": "none",
+    "text": "Describe the benefits of cycling to work. Do not use bullet points. Do not use headings. Do not write more than 120 words.",
+    "must_keep": ["bullet points", "headings", "120 words"],
+    "checks": [{ "type": "listCount", "value": 0 }, { "type": "notMatch", "value": "^#", "flags": "m" }, { "type": "maxWords", "value": 120 }],
+    "rubric": "Prose only, within 120 words, about cycling to work."
+  },
+  {
+    "id": "c12", "category": "duplicate phrases", "expect": "trim",
+    "text": "Please write a short product description for a reusable water bottle. Please make it friendly. Please keep it under 50 words. Please mention that it keeps drinks cold for 24 hours.",
+    "must_keep": ["50 words", "24 hours", "friendly"],
+    "checks": [{ "type": "maxWords", "value": 50 }, { "type": "contains", "value": "24" }],
+    "rubric": "Friendly product description that mentions 24 hours cold."
+  },
+  {
+    "id": "c13", "category": "punctuation", "expect": "none",
+    "text": "What is the capital of Australia? Answer in one word.",
+    "must_keep": ["?", "one word"],
+    "checks": [{ "type": "contains", "value": "Canberra" }, { "type": "maxWords", "value": 3 }],
+    "rubric": "One word: Canberra."
+  },
+  {
+    "id": "c14", "category": "reordered clauses", "expect": "none",
+    "text": "Only include studies published after 2015, not earlier ones. Do not include blog posts, only peer-reviewed papers. Give me three examples on sleep and memory.",
+    "must_keep": ["2015", "blog posts", "peer-reviewed", "three", "sleep"],
+    "checks": [{ "type": "contains", "value": "sleep" }],
+    "rubric": "Three peer-reviewed studies after 2015 on sleep and memory, no blog posts. Rater: check the citations are real."
+  },
+  {
+    "id": "c15", "category": "rejecting is best", "expect": "none", "reject_is_best": true,
+    "text": "Reply only in Spanish, in at most 3 sentences, with no emojis, and never use the word 'barato'. Explain why the sky is blue.",
+    "must_keep": ["only in Spanish", "at most 3 sentences", "no emojis", "barato", "sky is blue"],
+    "checks": [{ "type": "notContains", "value": "barato" }, { "type": "notMatch", "value": "\\p{Extended_Pictographic}", "flags": "u" }, { "type": "contains", "value": "cielo" }, { "type": "maxSentences", "value": 3 }],
+    "rubric": "Spanish only, at most 3 sentences, no emoji, correct explanation."
+  },
+  {
+    "id": "c16", "category": "code, table, indentation", "expect": "trim",
+    "text": "Please could you kindly review the following code and tell me, really briefly, what the bug is? Thanks a lot!\n\n```python\ndef add(a, b):\n    return a - b\n```\n\nAnd please could you also put your answer in a small table like this:\n\n| Line | Problem |\n|------|---------|\n| 2    | wrong operator |",
+    "must_keep": ["```python\ndef add(a, b):\n    return a - b\n```", "| Line | Problem |\n|------|---------|\n| 2    | wrong operator |"],
+    "checks": [{ "type": "contains", "value": "|" }, { "type": "maxWords", "value": 80 }],
+    "rubric": "Identifies that the code subtracts instead of adding; answer is a small table."
+  }
+]
