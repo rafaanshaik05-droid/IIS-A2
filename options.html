@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Prompt Review options</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{--bg:#fff;--fg:#1c2330;--muted:#5d6678;--line:#d9dee7;--soft:#f3f5f9;--accent:#1f4fd8}
+  @media (prefers-color-scheme:dark){:root{--bg:#1d2129;--fg:#e8ecf3;--muted:#9aa4b6;--line:#343b49;--soft:#262b35;--accent:#7ea2ff}}
+  body{font:15px/1.55 ui-sans-serif,system-ui,sans-serif;background:var(--bg);color:var(--fg);max-width:660px;margin:32px auto;padding:0 16px}
+  h1{font-size:20px} h2{font-size:16px;margin-top:28px}
+  label{display:block;margin:14px 0 4px;font-weight:600}
+  input[type=text],input[type=password],select{width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
+  .check{display:flex;gap:8px;align-items:flex-start;font-weight:400;margin-top:16px}
+  .check input{margin-top:5px}
+  button{padding:8px 14px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--fg);font:inherit;cursor:pointer;margin-right:8px}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  a{color:var(--accent)}
+  .hint{color:var(--muted);font-size:13px}
+  .box{background:var(--soft);border-radius:8px;padding:10px 14px;margin-top:10px}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  td{padding:6px 0;border-bottom:1px solid var(--line)} td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+  #status{margin-left:6px;color:var(--muted)}
+</style>
+</head>
+<body>
+<h1>Prompt Review</h1>
+
+<div class="box">
+  <b>Privacy</b>
+  <p class="hint" style="margin:6px 0 0">When you ask for a rewrite, your draft prompt is sent to the NVIDIA NIM API using your key. Only the draft is sent, never your chat history. This happens even when "save prompt text" below is off. Check NVIDIA's current terms for how your tier handles API data. Your key and the study log stay in this browser (extension storage). The key is sent in a request header, and is never written to the log or shown in error messages.</p>
+</div>
+
+<label for="apiKey">NVIDIA NIM API key</label>
+<input id="apiKey" type="password" autocomplete="off" placeholder="nvapi-...">
+
+<label for="model">Model</label>
+<input id="model" type="text" placeholder="nvidia/nemotron-3.5-bolt-e4b">
+<div class="hint">Use any NIM model your key or endpoint can access (e.g. nvidia/nemotron-3.5-bolt-e4b).</div>
+
+<label for="endpoint">Endpoint URL</label>
+<input id="endpoint" type="text" placeholder="https://integrate.api.nvidia.com/v1/chat/completions">
+<div class="hint">Default is the NVIDIA cloud API catalog. You can also point to a local NIM container (e.g. http://localhost:8000/v1/chat/completions).</div>
+
+<label for="level">Compression level</label>
+<select id="level">
+  <option value="light">Light: filler and duplicates only</option>
+  <option value="balanced">Balanced</option>
+  <option value="aggressive">Aggressive</option>
+</select>
+
+<label class="check"><input id="storeText" type="checkbox"><span><b>Save prompt text in the study log.</b> Off by default, so the log holds only counts and decisions. When on, the original prompt and the accepted text are saved in this browser's extension storage and included in the CSV export. Turn it on only for debugging and only with the participant's consent. The panel shows a notice while it is on. "Clear log" below deletes everything saved, and removing the extension does too.</span></label>
+
+<p><button id="save" class="primary">Save settings</button><span id="status"></span></p>
+
+<h2>Study log</h2>
+<p class="hint">One row per review: token estimates, what the user decided, how many changes were selected, what the basic check flagged, and the cost of the review itself.</p>
+<table id="stats"></table>
+<p><button id="export">Export CSV</button><button id="clear">Clear log</button></p>
+
+<h2>Test harness</h2>
+<p class="hint">Runs the fixed cases, compares the chatbot's answers to the original and the rewrite, and exports scored results.</p>
+<p><a href="harness.html">Open the test harness</a></p>
+
+<script src="options.js"></script>
+</body>
+</html>
