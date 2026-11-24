@@ -1,0 +1,44 @@
+[
+  {
+    "id": "h01", "category": "date in another style", "expect": "trim",
+    "text": "Could you please help me write a short reminder email to my team about the deadline on March 3rd, and keep it friendly? Please make sure it is under 80 words, and please do mention that the meeting room is 4B.",
+    "must_keep": ["March 3rd", "80 words", "4B", "friendly"],
+    "checks": [{ "type": "maxWords", "value": 80 }, { "type": "contains", "value": "4B" }],
+    "rubric": "Friendly reminder email, under 80 words, mentions the deadline and room 4B."
+  },
+  {
+    "id": "h02", "category": "stacked negations", "expect": "trim",
+    "text": "I'd really like some dinner ideas for tonight. No meat, no fish, nothing spicy, and only things that take under 30 minutes to cook. Give me four options in a list.",
+    "must_keep": ["No meat", "no fish", "spicy", "30 minutes", "four"],
+    "checks": [{ "type": "listCount", "value": 4 }, { "type": "notMatch", "value": "\\b(chicken|beef|pork|salmon|tuna|shrimp)\\b", "flags": "i" }],
+    "rubric": "Four vegetarian, mild dinners that take under 30 minutes."
+  },
+  {
+    "id": "h03", "category": "name and quote", "expect": "trim",
+    "text": "Hey! Could you maybe check whether this sentence sounds natural for an email to Dr. Okafor: \"I look forward to hearing from you at your earliest convenience.\" Just tell me yes or no, and one reason.",
+    "must_keep": ["Dr. Okafor", "\"I look forward to hearing from you at your earliest convenience.\"", "yes or no"],
+    "checks": [{ "type": "maxWords", "value": 45 }],
+    "rubric": "Yes or no plus one reason, about the sentence quoted."
+  },
+  {
+    "id": "h04", "category": "dangling reference", "expect": "unclear",
+    "text": "Fix this.",
+    "must_keep": [],
+    "checks": [],
+    "rubric": "Asks what to fix or says the text is missing. Does not invent content."
+  },
+  {
+    "id": "h05", "category": "rejecting is best", "expect": "none", "reject_is_best": true,
+    "text": "Book dates: 12 June to 15 June, 2 adults, 1 child aged 6, budget under £300 per night, no hostels. Suggest three areas of Lisbon to stay in.",
+    "must_keep": ["12 June", "15 June", "2 adults", "aged 6", "£300", "no hostels", "three"],
+    "checks": [{ "type": "listCount", "value": 3 }, { "type": "notContains", "value": "hostel" }],
+    "rubric": "Three Lisbon areas that fit the dates, party and budget, no hostels."
+  },
+  {
+    "id": "h06", "category": "long polite padding", "expect": "trim",
+    "text": "Hello! I hope your day is going well. I have been thinking, and I would very much like it if you could kindly give me a brief, simple explanation of how vaccines train the immune system. Maybe something a ten-year-old could understand, and not longer than about 120 words, if that is okay. Thank you ever so much!",
+    "must_keep": ["vaccines", "ten-year-old", "120 words"],
+    "checks": [{ "type": "maxWords", "value": 120 }, { "type": "contains", "value": "immune" }],
+    "rubric": "Simple, correct explanation a ten-year-old could follow, within about 120 words."
+  }
+]
