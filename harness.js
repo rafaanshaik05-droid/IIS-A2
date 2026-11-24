@@ -10,10 +10,10 @@ const BETTER = ["", "A", "B", "same"];
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const COLS = [
-  "case_id", "category", "run_ts", "prompt_version", "model", "level",
+  "case_set", "case_id", "category", "run_ts", "prompt_version", "provider", "model", "level",
   "api_tokens_original", "api_tokens_rewrite", "api_saved_pct", "est_saved_pct_default", "est_saved_pct_all_changes",
-  "edits_proposed", "edits_selected", "edits_flagged_by_check", "dropped_protected", "dropped_unmatched", "dropped_invalid",
-  "schema_ok", "clarity", "changed", "expectation_met", "reject_is_best", "reject_outcome_ok", "must_keep_missing",
+  "edits_proposed", "edits_selected", "edits_flagged_by_check", "edits_normalized", "dropped_protected", "dropped_unmatched", "dropped_noop", "dropped_invalid", "preserve_checked",
+  "schema_ok", "clarity", "clarity_source", "changed", "expectation_met", "reject_is_best", "reject_outcome_ok", "must_keep_missing", "constraint_words_fewer",
   "checks_total", "checks_passed_original", "checks_passed_rewrite", "review_cost_in", "review_cost_out",
   "meaning", "constraints", "added", "answer_a_is", "score_a", "score_b", "better", "task_score_original", "task_score_rewrite",
   "fault", "answer_hallucination", "notes", "rewrite_text", "answer_original", "answer_rewrite", "error"
@@ -31,8 +31,8 @@ async function call(msg) {
   return { ok: false, error: "Rate limited (429) after retries" };
 }
 
-async function runCase(c) {
-  const row = { case_id: c.id, category: c.category, run_ts: new Date().toISOString(), reject_is_best: !!c.reject_is_best, meaning: "", constraints: "", added: "", score_a: "", score_b: "", better: "", fault: "", answer_hallucination: "", notes: "" };
+async function runCase(c, caseSet) {
+  const row = { case_set: caseSet, case_id: c.id, category: c.category, run_ts: new Date().toISOString(), reject_is_best: !!c.reject_is_best, meaning: "", constraints: "", added: "", score_a: "", score_b: "", better: "", fault: "", answer_hallucination: "", notes: "" };
   const r = await call({ type: "optimise", text: c.text, harness: true });
   if (!r.ok) return { ...row, error: r.error };
 
@@ -52,24 +52,28 @@ async function runCase(c) {
   const checks = c.checks || [];
   const c0 = PR.runChecks(a0.text, checks);
   const c1 = PR.runChecks(a1.text, checks);
-  const mkCheck = PR.validateMustKeeps ? PR.validateMustKeeps(c.text, out) : { missing: (c.must_keep || []).filter((k) => !out.toLowerCase().includes(k.toLowerCase())) };
-  const missing = mkCheck.missing;
+  // Must-keeps come from the prompt itself plus the strings this case lists. The extension code never sees cases.json.
+  const mk = PR.validateMustKeeps(c.text, out, c.must_keep || []);
+  const missing = mk.missing;
+  const counts = r.meta.counts || {};
   const met = c.expect === "none" ? loc.edits.length === 0 || !changed : c.expect === "unclear" ? r.data.clarity === "unclear" : changed;
   const tIn0 = a0.usage.input;
   const tIn1 = a1.usage.input;
   const flipped = changed && Math.random() < 0.5; // which answer is shown as A
   return {
     ...row,
-    prompt_version: r.meta.prompt_version, model: r.meta.model, level: r.meta.level,
+    prompt_version: r.meta.prompt_version, provider: r.meta.provider, model: r.meta.model, level: r.meta.level,
     api_tokens_original: tIn0 ?? "", api_tokens_rewrite: tIn1 ?? "",
     api_saved_pct: tIn0 && tIn1 ? Math.round(((tIn0 - tIn1) / tIn0) * 100) : "",
     est_saved_pct_default: est(out), est_saved_pct_all_changes: est(all),
-    edits_proposed: r.data.edits.length, edits_selected: loc.edits.filter((e) => e.accepted).length,
+    edits_proposed: counts.proposed ?? r.data.edits.length, edits_selected: loc.edits.filter((e) => e.accepted).length,
     edits_flagged_by_check: loc.edits.filter((e) => e.flags.length).length,
-    dropped_protected: loc.skippedProtected, dropped_unmatched: loc.unmatched, dropped_invalid: r.meta.invalid_dropped,
-    schema_ok: r.meta.schema_ok, clarity: r.data.clarity, changed, expectation_met: met,
+    edits_normalized: Math.max(counts.normalized || 0, loc.normalized),
+    dropped_protected: (counts.skipped_protected || 0) + loc.skippedProtected, dropped_unmatched: (counts.unmatched || 0) + loc.unmatched,
+    dropped_noop: (counts.noop || 0) + loc.noop, dropped_invalid: r.meta.invalid_dropped, preserve_checked: !!r.meta.preserve_checked,
+    schema_ok: r.meta.schema_ok, clarity: r.data.clarity, clarity_source: r.data.clarity_source || "", changed, expectation_met: met,
     reject_outcome_ok: c.reject_is_best ? !changed : "",
-    must_keep_missing: missing.join(" | "),
+    must_keep_missing: missing.join(" | "), constraint_words_fewer: mk.fewer.join(" | "),
     checks_total: checks.length, checks_passed_original: c0.passed, checks_passed_rewrite: c1.passed,
     review_cost_in: r.meta.usage.input ?? "", review_cost_out: r.meta.usage.output ?? "",
     answer_a_is: changed ? (flipped ? "rewrite" : "original") : "original",
@@ -200,6 +204,17 @@ function summary() {
   }, {});
   const hallucinationCount = ok.filter((r) => (r.answer_hallucination && r.answer_hallucination !== "none") || r.fault === "answer hallucination").length;
   const faultDetails = Object.entries(faultCounts).map(([k, v]) => `${k}: ${v}`).join(", ") || "none logged";
+  const droppedAll = (r) => (Number(r.dropped_protected) || 0) + (Number(r.dropped_unmatched) || 0) + (Number(r.dropped_noop) || 0) + (Number(r.dropped_invalid) || 0);
+  const unscored = ok.filter((r) => r.score_a === "").length;
+  const notChecked = ok.filter((r) => !r.preserve_checked).length;
+  const needFault = ok.filter((r) => !r.fault).length;
+  // Runs may be compared (across models or prompt versions) only when the foundations hold; see EVALUATION.md.
+  const blockers = [
+    notChecked ? `${notChecked} row(s) ran without the preservation checks` : "",
+    unscored ? `${unscored} row(s) not yet scored` : "",
+    needFault ? `${needFault} row(s) have no fault source` : "",
+    !(PR.validateMustKeeps && PR.classifyClarity && PR.normalizeDates) ? "shared.js is missing a required function" : ""
+  ].filter(Boolean);
   const lines = [
     `Cases run: ${ok.length} of ${rows.length}. Rewrite changed the prompt in ${changed.length}; left it alone in ${ok.length - changed.length}.`,
     `Prompt tokens saved (API counts, changed cases): ${saved}. Tokens spent on the rewrite requests: ${cost}. Net: ${saved - cost}.`,
@@ -207,7 +222,8 @@ function summary() {
     `Rater scores so far: ${scored.length} changed cases scored. Rewrite answer as good or better in ${equalOrBetter}, worse in ${worse}.`,
     `Rejecting was the best outcome in ${rejectCases.length} case(s): the default selection left the prompt alone in ${rejectCases.filter((r) => r.reject_outcome_ok).length}.`,
     `Fault attribution: ${faultDetails}. Answer hallucinations logged: ${hallucinationCount} (marked separately from rewrite faults).`,
-    `Edits left out by default because of model or check risk: ${sum(ok, "edits_proposed") - sum(ok, "edits_selected") - sum(ok, "dropped_protected") - sum(ok, "dropped_unmatched") - sum(ok, "dropped_invalid")}. Saving if everything were included instead (estimate, mean): ${Math.round(sum(ok, "est_saved_pct_all_changes") / ok.length)}% versus ${Math.round(sum(ok, "est_saved_pct_default") / ok.length)}% by default.`
+    `Edits left out by default because of model or check risk: ${sum(ok, "edits_proposed") - sum(ok, "edits_selected") - ok.reduce((t, r) => t + droppedAll(r), 0)}. Dates put back into the writer's style: ${sum(ok, "edits_normalized")}. Saving if everything were included instead (estimate, mean): ${Math.round(sum(ok, "est_saved_pct_all_changes") / ok.length)}% versus ${Math.round(sum(ok, "est_saved_pct_default") / ok.length)}% by default.`,
+    `Ready to compare with another model or prompt version: ${blockers.length ? "no. " + blockers.join("; ") + "." : "yes, this run meets the conditions in EVALUATION.md."}`
   ];
   box.replaceChildren(...lines.map((t) => Object.assign(document.createElement("div"), { textContent: t })));
   box.hidden = false;
@@ -216,16 +232,17 @@ function summary() {
 $("run").addEventListener("click", async () => {
   $("run").disabled = true;
   $("export").disabled = true;
-  const cases = await (await fetch("cases.json")).json();
+  const caseSet = $("set").value; // "cases" (development) or "cases.heldout" (report once per version, never tune on it)
+  const cases = await (await fetch(`${caseSet}.json`)).json();
   rows = [];
   for (let i = 0; i < cases.length; i++) {
     $("progress").textContent = `Running ${i + 1} of ${cases.length}…`;
-    rows.push(await runCase(cases[i]));
+    rows.push(await runCase(cases[i], caseSet));
     render();
     await sleep(400);
   }
   const first = rows.find((r) => r.prompt_version);
-  $("runinfo").textContent = first ? `Prompt version ${first.prompt_version}, model ${first.model}, level ${first.level}, run at ${first.run_ts}` : "";
+  $("runinfo").textContent = first ? `Prompt version ${first.prompt_version}, provider ${first.provider}, model ${first.model}, level ${first.level}, run at ${first.run_ts}` : "";
   $("progress").textContent = "Done. Score the answers (A and B are in random order), then export.";
   $("run").disabled = false;
   $("export").disabled = false;
@@ -241,6 +258,6 @@ $("export").addEventListener("click", () => {
   const lines = [COLS.join(",")].concat(rows.map((r) => COLS.map((c) => csvCell(r[c])).join(",")));
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([lines.join("\n")], { type: "text/csv" }));
-  a.download = `harness-${rows.find((r) => r.prompt_version)?.prompt_version || "run"}-${Date.now()}.csv`;
+  a.download = `harness-${rows[0]?.case_set || "run"}-${rows.find((r) => r.prompt_version)?.prompt_version || "run"}-${Date.now()}.csv`;
   a.click();
 });
