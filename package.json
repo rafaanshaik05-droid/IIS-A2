@@ -4,7 +4,7 @@
     "private": true,
     "description": "Browser extension that adds a tracked changes review step to chatbot prompts",
     "scripts" :{
-        "tests": "node tests/shared.test.js && node tests/content.test.js"
+       "test": "node tests/options.test.js && node tests/shared.test.js && node tests/rules.test.js && node tests/background.test.js && node tests/no-test-data.test.js && node tests/content.test.js"
     },
     "devDependencies": {
         "jsdom": "^26.0.0"
