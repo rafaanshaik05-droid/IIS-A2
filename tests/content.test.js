@@ -41,7 +41,8 @@ function setup(opts = {}) {
         if (msg.type === "optimise") {
           if (opts.delay) await sleep(opts.delay);
           opts.during?.();
-          return { ok: true, data: opts.data ? opts.data() : data(), meta: { prompt_version: "t", model: "m", level: "balanced", usage: { input: 10, output: 5 }, schema_ok: true, invalid_dropped: 0, store_text: false } };
+          const d = opts.data ? opts.data() : data();
+          return { ok: true, data: d, meta: { prompt_version: "t", model: "m", level: "balanced", usage: { input: 10, output: 5 }, schema_ok: true, invalid_dropped: 0, store_text: false, endpoint_host: "api.test", preserve_checked: true, counts: { proposed: d.edits.length, unmatched: 0, skipped_protected: 0, noop: 0, normalized: 0 } } };
         }
         if (msg.type === "log") logs.push(msg.entry);
         if (msg.type === "log_patch") patches.push(msg.patch);
@@ -235,23 +236,67 @@ async function test(name, fn) {
     assert.ok(/No rewrite suggested/.test(txt) && /Every phrase states a requirement/.test(txt) && /does not mean your prompt is perfect/.test(txt), txt);
   });
 
-  await test("Accept is blocked if a cases.json must-keep is missing from the resulting prompt", async () => {
-    const text = "Can you please write me a formal email to my landlord, Mr. Patel, about the broken heater in flat 12B? It has been broken since 3 March and I want it fixed within 7 days. Please make sure the email is formal and polite. Please don't threaten legal action.";
+  const LOSSY = "Please write a short and friendly note to the building manager about the broken heater, and make sure it is done by 3 March, thank you so much for all of your kind help with this.";
+  const lossyData = () => ({ intent_summary: "x", clarity: "clear", clarity_note: "", no_change_reason: "", edits: [{ original: ", and make sure it is done by 3 March", replacement: "", type: "filler", reason: "Wordy.", risk: "low" }] });
+  const shadow = (t) => t.w.document.getElementById("prompt-review-host").shadowRoot;
+
+  await test("a lost detail is not blocked: the first Accept asks to confirm, the second applies", async () => {
+    const t = setup({ data: lossyData });
+    t.a.value = LOSSY;
+    t.focus(t.a);
+    t.review();
+    await sleep(30);
+    shadow(t).querySelector(".edit").click(); // include the flagged change on purpose
+    assert.ok(/Not in the result: “3 March”/.test(t.panelText()), t.panelText());
+    assert.ok(t.btn("Accept anyway"), "button names the situation");
+    t.btn("Accept anyway").click();
+    assert.strictEqual(t.a.value, LOSSY, "first click must not write");
+    assert.ok(t.btn("Click again to accept anyway"));
+    t.btn("Click again to accept anyway").click();
+    assert.ok(!t.a.value.includes("3 March"));
+    assert.strictEqual(t.logs[0].confirmed_loss, true);
+    assert.ok(t.logs[0].lost_at_decision >= 1);
+    assert.strictEqual(t.logs[0].decision, "accepted");
+  });
+
+  await test("changing the selection starts the confirmation again", async () => {
+    const t = setup({ data: lossyData });
+    t.a.value = LOSSY;
+    t.focus(t.a);
+    t.review();
+    await sleep(30);
+    const edit = () => shadow(t).querySelector(".edit");
+    edit().click();
+    t.btn("Accept anyway").click();
+    assert.ok(t.btn("Click again to accept anyway"));
+    edit().click(); // leave it out again
+    assert.ok(t.btn("Accept rewrite"), "label returns to normal");
+    edit().click();
+    assert.ok(t.btn("Accept anyway"), "confirmation was reset, not carried over");
+  });
+
+  await test("a date the model restyled is put back, and the panel says so", async () => {
+    const text = "Please could you kindly write a short and friendly note to Mr. Patel about the broken heater in flat twelve by 3 March, thank you so much for all of your kind help with this whole matter.";
     const t = setup({
-      data: () => ({
-        intent_summary: "Email landlord", clarity: "clear", clarity_note: "", no_change_reason: "",
-        edits: [{ original: " in flat 12B", replacement: "", type: "filler", reason: "Remove flat number.", risk: "low" }]
-      })
+      data: () => ({ intent_summary: "x", clarity: "clear", clarity_note: "", no_change_reason: "", edits: [{ original: "Please could you kindly write a short and friendly note to Mr. Patel about the broken heater in flat twelve by 3 March", replacement: "Write a short and friendly note to Mr. Patel about the broken heater in flat twelve by March 3", type: "wordy", reason: "Shorter.", risk: "low" }] })
     });
     t.a.value = text;
     t.focus(t.a);
     t.review();
     await sleep(30);
-    const edit = t.w.document.getElementById("prompt-review-host").shadowRoot.querySelector(".edit");
-    if (edit && !edit.classList.contains("on")) edit.click();
+    shadow(t).querySelector(".edit").dispatchEvent(new t.w.Event("mouseenter"));
+    assert.ok(/Kept your date style \(“3 March”\)/.test(shadow(t).querySelector(".detail").textContent));
     t.btn("Accept rewrite").click();
-    assert.ok(/Cannot accept rewrite/i.test(t.panelText()) && /12B/.test(t.panelText()), t.panelText());
-    assert.strictEqual(t.a.value, text);
+    assert.ok(t.a.value.startsWith("Write a short and friendly note to Mr. Patel about the broken heater in flat twelve by 3 March"), t.a.value);
+  });
+
+  await test("the panel names the host the draft was sent to", async () => {
+    const t = setup();
+    t.a.value = PROMPT;
+    t.focus(t.a);
+    t.review();
+    await sleep(30);
+    assert.ok(/sent to api\.test/.test(t.panelText()), t.panelText());
   });
 
   console.log(`\n${passed} passed`);
