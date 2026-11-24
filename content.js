@@ -163,6 +163,7 @@
     panel?.remove();
     panel = null;
     ui.refreshStale = null;
+    ui.refreshAccept = null;
     state?.input?.focus?.();
   }
   function openPanel(...kids) {
@@ -207,6 +208,7 @@
       decision,
       outcome: s.edits.length ? "ok" : "no_edits",
       prompt_version: s.meta.prompt_version,
+      provider: s.meta.provider,
       model: s.meta.model,
       level: s.meta.level,
       tokens_before: before,
@@ -218,11 +220,17 @@
       edits_total: s.edits.length,
       edits_accepted: s.edits.filter((e) => e.accepted).length,
       edits_flagged_by_check: s.edits.filter((e) => e.flags.length).length, // found by the basic check, not the model
+      edits_normalized: s.normalized, // dates put back into the writer's own style
+      dropped_noop: s.noop,
+      preserve_checked: s.meta.preserve_checked,
+      confirmed_loss: !!s.confirmedLoss,
+      lost_at_decision: s.lostAtDecision || 0,
       dropped_unmatched: s.unmatched,
       dropped_protected: s.skipped,
       dropped_invalid: s.meta.invalid_dropped,
       schema_ok: s.meta.schema_ok,
       clarity: s.clarity, // "unclear" points at the original request rather than the rewrite
+      clarity_source: s.claritySource, // "rule" or "model"
       write_back: s.writeBack || "",
       review_ms: Date.now() - s.openedAt,
       intent_feedback: s.intentFeedback,
@@ -255,6 +263,13 @@
     s.input.addEventListener("input", s.onInput);
   }
 
+  // Details from the original that the result would no longer have (dates count as kept in any style).
+  function lossList(s, out) {
+    if (out === s.original) return [];
+    const v = PR.validateMustKeeps(s.original, out);
+    return v.missing.map((x) => `“${x}”`).concat(v.fewer.map((x) => `fewer “${x}”`));
+  }
+
   function showConflict(s, out) {
     log("blocked_changed");
     showMessage(
@@ -275,17 +290,16 @@
     const auto = PR.resultText(s.original, s.edits);
     const out = s.mode === "edit" ? s.manualText ?? auto : auto;
     s.finalText = out;
-    if (PR.validateMustKeeps) {
-      const mk = PR.validateMustKeeps(s.original, out);
-      if (!mk.passed && mk.missing.length > 0) {
-        showMessage(
-          `Cannot accept rewrite: the following required must-keep details would be lost: ${mk.missing.map((x) => `“${x}”`).join(", ")}. Please include the necessary changes or use Edit to restore them.`,
-          true
-        );
-        return;
-      }
-    }
     if (!inputUnchanged(s)) return showConflict(s, out); // re-check at the moment of writing, not only while watching
+    // Must-keeps come from the user's own prompt. If the result would lose some, ask once more instead of blocking:
+    // the user may mean to remove them, and a hard block would take that decision away.
+    const lost = lossList(s, out);
+    s.lostAtDecision = lost.length;
+    if (lost.length && !s.confirmedLoss) {
+      s.confirmedLoss = true;
+      ui.refreshAccept?.();
+      return;
+    }
     unwatch(s);
     const input = s.input;
     const result = writeText(input, out);
@@ -341,9 +355,15 @@
       "Your prompt changed after this suggestion was made. Accept is turned off so your newer text is not overwritten.",
       h("div", { class: "actions" }, h("button", { class: "btn", onclick: () => startReview(false) }, "Suggest again"))
     );
+    const acceptLabel = () => (editing ? "Accept edited prompt" : "Accept rewrite");
     ui.refreshStale = () => {
       stale.hidden = !s.stale;
       acceptBtn.disabled = s.stale;
+    };
+    ui.refreshAccept = () => {
+      const lost = lossList(s, current());
+      acceptBtn.textContent = !lost.length ? acceptLabel() : s.confirmedLoss ? "Click again to accept anyway" : "Accept anyway";
+      acceptBtn.title = lost.length ? `This would lose ${lost.join(", ")} from your original.` : "Put this prompt in the chat box. Nothing is sent.";
     };
 
     function meter() {
@@ -354,9 +374,11 @@
       tokens.textContent = `≈ ${before} → ≈ ${after} tokens`;
       saved.textContent = pct > 0 ? `${pct}% shorter` : pct < 0 ? `${-pct}% longer` : "no saving";
       bar.style.width = `${before ? Math.min(100, (after / before) * 100) : 100}%`;
+      s.confirmedLoss = false; // any change to the selection or the text starts the confirmation again
       const w = result === s.original ? [] : PR.promptChecks(s.original, result);
       warnbox.hidden = !w.length;
       warnbox.textContent = w.length ? `Check before accepting: ${w.join(" ")}` : "";
+      ui.refreshAccept?.();
     }
 
     function editNode(e) {
@@ -366,7 +388,8 @@
       };
       const show = () => {
         const check = e.flags.length ? `Basic check: ${e.flags.map((f) => f.text).join("; ")}.` : "Basic check: found nothing.";
-        detail.textContent = `${e.reason} Model: ${e.modelRisk} risk. ${check} Click to ${e.accepted ? "leave it out" : "include it"}.`;
+        const kept = e.normalized && e.normalized.length ? ` Kept your date style (${e.normalized.map((c) => `“${c.to}”`).join(", ")}).` : "";
+        detail.textContent = `${e.reason} Model: ${e.modelRisk} risk. ${check}${kept} Click to ${e.accepted ? "leave it out" : "include it"}.`;
       };
       const who = e.modelRisk !== "low" && e.flags.length ? "Flagged by the model and the basic check" : e.flags.length ? "Flagged by the basic check" : "Flagged by the model";
       return h(
@@ -436,7 +459,7 @@
 
     if (!n) {
       const why = s.proposed
-        ? `The model suggested ${s.proposed} change${s.proposed === 1 ? "" : "s"}, but none could be applied safely (${s.skipped} inside code, tables or quotes, ${s.unmatched} not found in your text).`
+        ? `The model suggested ${s.proposed} change${s.proposed === 1 ? "" : "s"}, but none could be applied safely (${s.skipped} inside code, tables or quotes, ${s.unmatched} not found in your text, ${s.noop} that changed nothing${s.invalid ? `, ${s.invalid} in an unusable format` : ""}).`
         : `The model found no safe cut${s.noChangeReason ? `: ${s.noChangeReason}` : "."}`;
       children.push(
         h("p", {}, `${why} That does not mean your prompt is perfect. It only means no safe change was found.`),
@@ -479,7 +502,7 @@
         { class: "note" },
         h("summary", {}, "About this suggestion"),
         h("p", {}, "Changes start selected only when both the model and a basic automatic check rate them low risk. The check only looks for dropped numbers, quotes, code, links and names, fewer words like not or only, changed line breaks, a lost question mark, and reordered key words. It cannot tell whether the meaning changed, so read the result before you accept."),
-        h("p", {}, "Your draft was sent to the NVIDIA NIM API to make this suggestion. Token counts are estimates."),
+        h("p", {}, `Your draft was sent to ${s.meta.endpoint_host || "the API you configured"} to make this suggestion. Token counts are estimates.`),
         TIER === "best_effort" ? h("p", {}, "This site is not in the tested list. If the box does not update properly, copy the rewrite and paste it in.") : null,
         s.meta.store_text ? h("p", {}, "Prompt text is being saved to your study log in this browser.") : null
       )
@@ -515,7 +538,7 @@
         h("button", { class: "btn", onclick: () => startReview(true) }, "Suggest anyway")
       );
     }
-    openPanel(h("p", { role: "status" }, "Working on a suggestion…"), h("p", { class: "detail" }, "Your draft is being sent to the NVIDIA NIM API."));
+    openPanel(h("p", { role: "status" }, "Working on a suggestion…"), h("p", { class: "detail" }, "Your draft is being sent to the API you set in Options."));
     const mine = panel;
     let res;
     try {
@@ -526,18 +549,23 @@
     }
     if (panel !== mine) return; // the user closed the panel while waiting
     if (!res || !res.ok) return showMessage(res?.error || "Something went wrong.", true);
-    const located = PR.locate(raw, res.data.edits);
+    const located = PR.locate(raw, res.data.edits); // second layer: the worker has already filtered these
+    const pre = res.meta.counts || {};
     state = {
       traceId: crypto.randomUUID().slice(0, 8),
       original: raw,
       edits: located.edits,
-      unmatched: located.unmatched,
-      skipped: located.skippedProtected,
-      proposed: res.data.edits.length,
+      unmatched: (pre.unmatched || 0) + located.unmatched,
+      skipped: (pre.skipped_protected || 0) + located.skippedProtected,
+      noop: (pre.noop || 0) + located.noop,
+      invalid: res.meta.invalid_dropped || 0,
+      normalized: Math.max(pre.normalized || 0, located.normalized),
+      proposed: pre.proposed ?? res.data.edits.length,
       preSelected: located.edits.filter((e) => e.accepted).length,
       intent: res.data.intent_summary,
       clarity: res.data.clarity,
       clarityNote: res.data.clarity_note,
+      claritySource: res.data.clarity_source || "",
       noChangeReason: res.data.no_change_reason,
       meta: res.meta,
       input,
