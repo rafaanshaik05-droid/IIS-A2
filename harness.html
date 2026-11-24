@@ -28,7 +28,7 @@
 <body>
 <h1>Prompt Review test harness</h1>
 <p class="hint">For each fixed case this makes the rewrite the user would see by default (only changes rated low risk by the model and the basic check), then asks the same model to answer both the original prompt and the rewrite. Answers are checked against criteria written in advance, and raters score them blind (A or B, in random order) using EVALUATION.md. Change one thing between runs, rerun, and compare. Ten or so cases show behaviour on those cases only, not general reliability.</p>
-<p><button id="run" class="primary">Run all cases</button><button id="export" disabled>Export CSV</button><span id="progress" class="hint"></span></p>
+<p><label>Case set <select id="set"><option value="cases">Development (tune on these)</option><option value="cases.heldout">Held-out (report these, never tune on them)</option></select></label> <button id="run" class="primary">Run all cases</button><button id="export" disabled>Export CSV</button><span id="progress" class="hint"></span></p>
 <p id="runinfo" class="hint"></p>
 <div id="summary" class="box" hidden></div>
 <div class="wrap"><table id="table"></table></div>
