@@ -28,19 +28,32 @@
 
 <div class="box">
   <b>Privacy</b>
-  <p class="hint" style="margin:6px 0 0">When you ask for a rewrite, your draft prompt is sent to the NVIDIA NIM API using your key. Only the draft is sent, never your chat history. This happens even when "save prompt text" below is off. Check NVIDIA's current terms for how your tier handles API data. Your key and the study log stay in this browser (extension storage). The key is sent in a request header, and is never written to the log or shown in error messages.</p>
+  <p class="hint" style="margin:6px 0 0">When you ask for a rewrite, your draft prompt is sent to the provider selected below, using that provider’s key. Only the draft is sent, never your chat history. This happens even when "save prompt text" is off. Check the provider’s current terms for how it handles API data on your tier. Your keys and the study log stay in this browser (extension storage). A key is sent in a request header, and is never written to the log or shown in error messages.</p>
 </div>
 
-<label for="apiKey">NVIDIA NIM API key</label>
-<input id="apiKey" type="password" autocomplete="off" placeholder="nvapi-...">
+<label for="provider">Model provider</label>
+<select id="provider">
+  <option value="nvidia">NVIDIA NIM</option>
+  <option value="gemini">Google Gemini</option>
+  <option value="custom">Other (OpenAI-compatible)</option>
+</select>
+<div class="hint" id="whereSent"></div>
+
+<label for="apiKey">API key for this provider</label>
+<input id="apiKey" type="password" autocomplete="off">
+<div class="hint">Each provider keeps its own key. Switching provider never sends one provider’s key to another.</div>
 
 <label for="model">Model</label>
-<input id="model" type="text" placeholder="nvidia/nemotron-3.5-bolt-e4b">
-<div class="hint">Use any NIM model your key or endpoint can access (e.g. nvidia/nemotron-3.5-bolt-e4b).</div>
+<input id="model" type="text">
+<div class="hint" id="modelHint"></div>
 
-<label for="endpoint">Endpoint URL</label>
-<input id="endpoint" type="text" placeholder="https://integrate.api.nvidia.com/v1/chat/completions">
-<div class="hint">Default is the NVIDIA cloud API catalog. You can also point to a local NIM container (e.g. http://localhost:8000/v1/chat/completions).</div>
+<div id="endpointRow">
+  <label for="endpoint">Endpoint URL</label>
+  <input id="endpoint" type="text">
+  <div class="hint">Use a local NIM container if you like (for example http://localhost:8000/v1/chat/completions). Any other host is asked for your permission when you save, and your draft and key are then sent there. Your key is only sent over https, or to this computer.</div>
+</div>
+
+<label class="check" id="thinkingRow"><input id="noThinking" type="checkbox"><span>Turn off the model’s extra thinking (thinking budget 0). Cuts cost and delay on Gemini models that support it. If requests fail with this on, turn it off.</span></label>
 
 <label for="level">Compression level</label>
 <select id="level">
@@ -62,6 +75,7 @@
 <p class="hint">Runs the fixed cases, compares the chatbot's answers to the original and the rewrite, and exports scored results.</p>
 <p><a href="harness.html">Open the test harness</a></p>
 
+<script src="providers.js"></script>
 <script src="options.js"></script>
 </body>
 </html>
