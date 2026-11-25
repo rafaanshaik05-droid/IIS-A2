@@ -1,127 +1,125 @@
 # Prompt Review
 
-**Prose word count:** ~1,140 words (excluding code blocks and tables)
+**README prose word count: 997** (excludes code blocks, commands, tables and URLs)
 
-A Chrome/Chromium Manifest V3 browser extension that adds a **tracked-changes review step** (`Alt+Shift+R` or extension toolbar icon) to chatbot prompt boxes before you send a prompt. It proposes shorter, clearer edits while preserving formatting and important details, and lets you inspect, toggle, accept, or undo every change.
+**Submitted commit:** Attached in the report
+**Repository:** https://github.com/rafaanshaik05-droid/IIS-A2
+**Course:** Intelligent Interactive Systems, Assignment 2 (University of Birmingham)
 
-## Repository & Development Evidence
+A Chrome/Chromium Manifest V3 extension that adds a **tracked-changes review step** before a chatbot receives your prompt. Press `Alt+Shift+R` (or click the toolbar icon) and a language model proposes a shorter version. You can include or leave out each change, edit the result, accept it, keep your original, or undo within 30 seconds. Nothing is ever sent automatically.
 
-- **Public GitHub Repository:** [https://github.com/rafaanshaik05-droid/IIS-A2](https://github.com/rafaanshaik05-droid/IIS-A2)
-- **Submitted Commit:** Attached in the submitted report
-- **Development Record:** See the structured entries below and the full commit history on `main` ([commits](https://github.com/rafaanshaik05-droid/IIS-A2/commits/main)).
+## Project status
 
----
+**Works (implemented):**
+- Tracked-changes review panel with an intent summary and one-line explanations per edit.
+- Per-edit toggles, manual editing, Accept, Keep original and 30-second Undo.
+- Dual-risk selection: an edit starts selected only if both the model and the rule-based check rate it low risk.
+- Protected regions (code, tables, quotes, indented lines), two-click confirmation when a flagged detail would be lost, and stale-input protection.
+- Three providers (NVIDIA NIM, Google Gemini, custom OpenAI-compatible), with separate settings per provider.
+- Evaluation harness with a 16-case development set and a 6-case held-out set.
+- 74 automated tests (all passing).
 
-## Development Record
+**Verified live:** `chatgpt.com` and `chat.openai.com` only.
 
-1. **Core edit placement, preservation rules, and ChatGPT DOM verification** — [`48ebba7`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/48ebba7), [`c083245`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/c083245), [`1e4a789`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/1e4a789), [`2d526e2`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/2d526e2)
-   - **What changed:** Built the edit-placement and protected-region engine (`shared.js`), the service worker API caller and JSON schema validator (`background.js`), the in-page tracked-changes review panel (`content.js`), and updated `TESTED_HOSTS` in `shared.js` (`2d526e2`).
-   - **Why:** To propose concise prompt rewrites without altering fenced code, inline code, tables, indentation, or quotes, and to restrict fallback chatbox selection to hosts whose DOM selectors have been verified live.
-   - **How checked:** Verified with `tests/shared.test.js` (23 tests) and `tests/content.test.js` (16 tests in a `jsdom` simulated DOM), plus live testing on `chatgpt.com` and `chat.openai.com`.
+**Simulated:** Scenarios B (flagged deletion) and C (typing while a review is open) in the report were exercised in a simulated DOM (jsdom), not on a live site.
 
-2. **Multi-provider support, header-only API keys, and two-click loss confirmation** — [`fadc0fb`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/fadc0fb), [`fec6413`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/fec6413), [`8846248`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/8846248)
-   - **What changed:** Added isolated per-provider settings for NVIDIA NIM, Google Gemini, and custom OpenAI-compatible endpoints (`fadc0fb`), and replaced the hard must-keep block with a two-click confirmation (**Accept rewrite** → **Accept again**) alongside date-style normalization and endpoint host attribution (`fec6413`).
-   - **Why:** To ensure switching providers never sends one provider's key to another, API keys stay in request headers and are scrubbed from errors, and users can intentionally override a preservation warning without silent detail loss.
-   - **How checked:** Verified with `tests/options.test.js` (5 tests) and `tests/background.test.js` (17 tests covering header-only key transmission, error scrubbing, and provider switching).
+**Not finished:**
+- Blind A/B response-quality scoring is pending. The held-out CSV in `results/` is unscored harness output.
+- Other configured chatbot sites (Claude, Gemini, Copilot, Perplexity, Grok, DeepSeek, Mistral, Poe) are best-effort and unverified.
+- No user evaluation has been run.
+- On a dense prompt (case h05) the model proposed a 7% trim instead of no edits, because there is no minimum-saving gate.
+- Token counts are character-based estimates.
 
-3. **Evaluation harness, held-out dataset, and anti-leakage guard** — [`6725dc7`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/6725dc7), [`8ffc44e`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/8ffc44e), [`52488d0`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/52488d0), [`ecc88f2`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/ecc88f2)
-   - **What changed:** Added separate development (`cases.json`, 16 cases) and held-out (`cases.heldout.json`, 6 cases) evaluation sets with CSV export (`6725dc7`, `ecc88f2`), rule tests (`52488d0`), and `tests/no-test-data.test.js` (`8ffc44e`).
-   - **Why:** To prevent test-case wording or `must_keep` strings from leaking into product code (`shared.js`, `background.js`, `content.js`, `options.js`) and to keep held-out evaluation cases uncontaminated.
-   - **How checked:** Verified via `npm test` (`tests/rules.test.js`: 12 tests; `tests/no-test-data.test.js`: 1 test; 74 tests passing overall).
+**Planned (not built):** send-time suggestion, an in-page compression slider (strength is currently chosen only on the Options page: `light`, `balanced`, `aggressive`), and exact per-chatbot token counts.
 
----
+## Technology stack
 
-## Features
+- **Chrome Manifest V3:** extension loading, service worker, storage, permissions, toolbar command.
+- **Vanilla JavaScript, HTML, CSS:** review panel, edit placement, provider requests, options page and harness, with no framework.
+- **Node.js test runner and jsdom:** automated tests; jsdom provides the simulated DOM.
+- **NVIDIA NIM** (default, and the evaluated provider): the held-out run used `nvidia/nemotron-3.5-bolt-e4b`. The model is configurable.
+- **Google Gemini and OpenAI-compatible endpoints:** supported as optional, unevaluated providers.
+- **Undecided:** which model to use for future evaluation runs.
 
-- **Tracked-Changes Review (`content.js`, `shared.js`):**
-  - Displays proposed edits inline before applying them to the active chat input.
-  - Protects sensitive regions from modification: fenced code blocks, inline code, Markdown tables, indented lines, and blockquotes.
-  - Separates **model risk** from **rule-based interface checks** (e.g., dropped numbers, names, links, quotes, punctuation, negations/qualifiers like `not`/`only`, reordered keywords, or changed line breaks). Only low-risk edits are selected by default.
-  - Normalizes restyled dates back to the user's original date format and warns when required details would be lost using a two-click confirmation (**Accept rewrite** → **Accept again**).
-  - Includes stale-text protection (disables **Accept** if the draft changes while the review is open) and one-click **Undo**.
-- **Multi-Provider Support (`providers.js`, `background.js`, `options.html`, `options.js`):**
-  - **NVIDIA NIM** (default `https://integrate.api.nvidia.com/v1/chat/completions`, or a custom/local NIM endpoint).
-  - **Google Gemini** (`https://generativelanguage.googleapis.com/v1beta/models`, with an optional toggle to disable extra thinking budget).
-  - **Other (OpenAI-compatible)** custom endpoints (requests explicit Chrome host permission on save).
-  - Each provider stores its own API key, model, and endpoint; keys are sent in request headers only, never written to logs, and scrubbed from error messages.
-  - Compression levels: `light`, `balanced`, and `aggressive`.
-- **Privacy & Study Log (`options.html`, `options.js`):**
-  - By default (`storeText: false`), only counts, token estimates, preservation warnings, and user decisions are logged in `chrome.storage`.
-  - Supports exporting the study log to CSV and clearing all stored log data.
-- **Supported Chatbot Sites (`manifest.json`, best effort):**
-  - `chatgpt.com`, `chat.openai.com` (verified live); `claude.ai`, `gemini.google.com`, `copilot.microsoft.com`, `www.perplexity.ai`, `grok.com`, `chat.deepseek.com`, `chat.mistral.ai`, and `poe.com` (configured in `manifest.json` on a best-effort basis; not yet verified live).
-
----
-
-## Project Structure
-
-| File / Folder | Purpose |
-| :--- | :--- |
-| `manifest.json` | Manifest V3 extension configuration, permissions, shortcut (`Alt+Shift+R`), and content script matches |
-| `shared.js` | Core edit-placement, protected-region detection, date normalization, must-keep validation, and risk checks |
-| `content.js` | In-page chatbox detection, tracked-changes review panel UI, stale-text guard, accept, and undo |
-| `background.js` | Service worker handling provider API calls, JSON schema validation, key scrubbing, and trace logging |
-| `providers.js` | Provider definitions (`nvidia`, `gemini`, `custom`) and per-provider settings resolution |
-| `options.html` / `options.js` | Extension settings page, privacy notice, study statistics, and CSV export |
-| `harness.html` / `harness.js` | Evaluation harness for running fixed test cases and exporting scored results |
-| `cases.json` / `cases.heldout.json` | 16 development cases and 6 held-out evaluation cases |
-| `tests/` | Automated Node.js test suites (`options`, `shared`, `rules`, `background`, `no-test-data`, `content`) |
-| `results/` | 'harness-cases.heldout-rw-5-1795546461629.csv'|
-
----
-
-## Installation & Usage
+## Running or inspecting
 
 1. Clone or download this repository.
-2. Open `chrome://extensions` in Chrome (or a Chromium-based browser).
-3. Enable **Developer mode**, click **Load unpacked**, and select the repository folder.
-4. Open the extension's **Options** page, choose a provider (**NVIDIA NIM**, **Google Gemini**, or **Other**), enter your API key, and click **Save settings**.
-5. Navigate to a supported chatbot site, type a draft prompt, and press `Alt+Shift+R` (or click the **Prompt Review** toolbar icon) to review suggested edits.
+2. Open `chrome://extensions`, enable **Developer mode**, click **Load unpacked** and select the repository folder.
+3. Open the extension's **Options** page, choose a provider, enter your own API key and click **Save settings**.
+4. Go to a supported chatbot site, type a draft and press `Alt+Shift+R`.
 
----
+**API keys.** No key is committed to this repository. Each reviewer supplies their own: an `nvapi-...` key from [build.nvidia.com](https://build.nvidia.com/) or an `AIza...` key from [aistudio.google.com](https://aistudio.google.com/). Keys are sent in request headers only and scrubbed from error messages.
 
-## Testing & Evaluation
-
-### Automated Tests
-
-Install dev dependencies (`jsdom`) and run the test suite:
+**Inspecting without a key.** The automated tests need no API key:
 
 ```bash
 npm install
 npm test
 ```
 
-The `npm test` script runs 6 test files (74 tests total):
-- `tests/options.test.js` (5 tests) — provider settings, per-provider isolation, and host permission prompts
-- `tests/shared.test.js` (23 tests) — formatting/protected-region preservation, risk flags, and edit placement
-- `tests/rules.test.js` (12 tests) — date equivalence, must-keep checks, and clarity detection
-- `tests/background.test.js` (17 tests) — response validation, provider switching, preflight filtering, and key scrubbing
-- `tests/no-test-data.test.js` (1 test) — ensures test-case strings do not leak into production code
-- `tests/content.test.js` (16 tests) — simulated DOM interaction, accept/undo, two-click loss confirmation, and stale-text protection
+The harness (**Options → Open the test harness**) and live use need a key. To inspect past results without one, open `results/harness-cases.heldout-rw-5-1795546461629.csv`.
 
-### Evaluation Harness
+| Test file | Tests |
+| :--- | :--- |
+| `tests/shared.test.js` | 23 |
+| `tests/background.test.js` | 17 |
+| `tests/content.test.js` | 16 |
+| `tests/rules.test.js` | 12 |
+| `tests/options.test.js` | 5 |
+| `tests/no-test-data.test.js` | 1 |
 
-Open **Options → Open the test harness** (`harness.html`) to run the fixed **Development** (`cases.json`, 16 cases) or **Held-out** (`cases.heldout.json`, 6 cases) datasets and export results to CSV for blind scoring.
+## Key files
 
----
+| File | Purpose |
+| :--- | :--- |
+| `manifest.json` | Permissions, shortcut and site matches |
+| `shared.js` | Edit placement, protected regions, risk and must-keep checks |
+| `content.js` | Chatbox detection, review panel, stale-input guard, Accept and Undo |
+| `background.js` | Provider calls, schema validation, key scrubbing, trace logging |
+| `providers.js` | Provider definitions and per-provider settings |
+| `options.html` / `options.js` | Settings, privacy notice, study statistics, CSV export |
+| `harness.html` / `harness.js` | Fixed-case evaluation and CSV export |
+| `cases.json` / `cases.heldout.json` | 16 development and 6 held-out cases |
 
-## Use of AI
+## Development record
 
-**Claude (Anthropic)** was used in two parts of this project:
+1. **Stage 1: edit placement, preservation and review panel.** Commits [`48ebba7`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/48ebba7), [`c083245`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/c083245), [`1e4a789`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/1e4a789), [`2d526e2`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/2d526e2)
+   - **Changed:** built the edit-placement and protected-region engine, the service worker with schema validation, and the in-page tracked-changes panel. Restricted fallback chatbox selection to verified hosts (`TESTED_HOSTS`).
+   - **Why:** to propose shorter prompts without altering code, tables, indentation or quotes, and to avoid guessing a text box on unverified sites (Assignment 1's transparency gap).
+   - **Checked:** `tests/shared.test.js`, `tests/content.test.js` and live use on ChatGPT.
 
-1. **Developing the prototype:** Assisted with drafting, iterating on, and debugging the extension modules (`shared.js`, `content.js`, `background.js`, `providers.js`), the evaluation harness (`harness.js`), and the Node.js test suites.
-2. **Preparing the report:** Assisted with structuring, drafting, and refining the written report and this `README.md`.
+2. **Stage 2: providers, safer decisions, Undo.** Commits [`fadc0fb`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/fadc0fb), [`fec6413`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/fec6413), [`8846248`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/8846248)
+   - **Changed:** added per-provider settings; replaced the hard block on flagged deletions with a two-click confirmation (`fec6413`), because the block prevented intentional edits; added date-style normalisation, 30-second Undo, a 40-token skip threshold and an 8-edit cap.
+   - **Why:** users can deliberately override a warning without silent detail loss, and one provider's key is never sent to another. The skip threshold exists because the review call costs about 785 tokens.
+   - **Checked:** `tests/options.test.js` and `tests/background.test.js` (header-only keys, error scrubbing, provider switching).
 
-**What was checked and changed:**
-- **Removed hardcoded must-keep test strings:** Checked `shared.js` to ensure must-keep details are extracted dynamically from the user's prompt rather than from test data, and added `tests/no-test-data.test.js` ([`8ffc44e`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/8ffc44e)) to fail the build if any 6-word test-case phrase or `must_keep` string appears in product code.
-- **Verified ChatGPT DOM selectors:** Tested chatbox detection live on `chatgpt.com` and `chat.openai.com` and updated `TESTED_HOSTS` in `shared.js` ([`2d526e2`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/2d526e2)) so unverified sites require explicit user focus rather than guessing a text box.
-- **Enforced header-only API keys & error scrubbing:** Checked `background.js` and `providers.js` with `tests/background.test.js` ([`8846248`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/8846248)) to confirm API keys are sent only in request headers, remain isolated per provider, and are scrubbed from any error messages before logging or display.
-- **Verified all reported metrics:** Re-ran `npm test` (74/74 passing) and checked dataset counts (16 development cases, 6 held-out cases) against the repository files.
+3. **Stage 3: evaluation harness and held-out validation.** Commits [`6725dc7`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/6725dc7), [`8ffc44e`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/8ffc44e), [`52488d0`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/52488d0), [`ecc88f2`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/ecc88f2)
+   - **Changed:** added development and held-out case sets with CSV export, rule tests, and a test that fails if test-case text appears in product code. Replaced hard-coded must-keep keywords with extraction from the user's own draft.
+   - **Why:** development on the 16-case set showed that must-keep strings in runtime code leaked test ground truth.
+   - **Checked:** `npm test` (74/74). Held-out run: 6/6 passed schema and preservation checks, 5/6 met behavioural expectations, with 11.6% average downstream token saving (up to 22%).
 
----
+## AI assistance
 
-## References & Acknowledgements
+**Claude (Anthropic)** was used to:
+- draft and debug the extension modules, harness and test suites (Manifest V3 boilerplate, jsdom fixtures and early drafts);
+- help prepare the report, its figures and this README.
 
-- [Chrome Extensions Manifest V3 Documentation](https://developer.chrome.com/docs/extensions/mv3/) — service workers, `storage`, `activeTab`, `scripting`, and `commands` APIs.
-- [jsdom](https://github.com/jsdom/jsdom) (`^26.0.0`) — used as a dev dependency to simulate DOM behavior in `tests/content.test.js` and `tests/options.test.js`.
-- [NVIDIA NIM API](https://build.nvidia.com/) and [Google Gemini API (`generateContent`)](https://ai.google.dev/gemini-api/docs) — LLM inference endpoints supported by the extension.
+**Google Gemini** was used only as an optional runtime provider, not as a coding or writing assistant.
+
+**What I checked or changed:**
+- Claude's must-keep checks used keywords that leaked test data. I replaced them with dynamic extraction and added `tests/no-test-data.test.js` ([`8ffc44e`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/8ffc44e)).
+- Claude's hard block on flagged deletions became two-click confirmation ([`fec6413`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/fec6413)).
+- I tested chatbox detection live on ChatGPT and limited fallback selection to verified hosts ([`2d526e2`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/2d526e2)).
+- I checked key handling with `tests/background.test.js` ([`8846248`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/8846248)).
+- I removed references I could not verify, re-ran `npm test`, and checked the case counts and metrics against the repository files.
+- Architecture, mapping of lecture concepts to design choices, and evaluation criteria are my own.
+
+## Additional files
+
+None. There is no accompanying ZIP. The report (with its architecture diagram and storyboards) is submitted separately through the assignment portal. Held-out results are in `results/`.
+
+## References and acknowledgements
+
+- [Chrome Extensions Manifest V3 documentation](https://developer.chrome.com/docs/extensions/mv3/)
+- [jsdom](https://github.com/jsdom/jsdom) (`^26.0.0`), a dev dependency for simulated-DOM tests
+- [NVIDIA NIM API](https://build.nvidia.com/) and [Google Gemini API](https://ai.google.dev/gemini-api/docs), the supported model endpoints
