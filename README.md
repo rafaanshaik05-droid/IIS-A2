@@ -5,7 +5,7 @@ A Chrome/Chromium Manifest V3 browser extension that adds a **tracked-changes re
 ## Repository & Development Evidence
 
 - **Public GitHub Repository:** [https://github.com/rafaanshaik05-droid/IIS-A2](https://github.com/rafaanshaik05-droid/IIS-A2)
-- **Submitted Commit:** `ecc88f2` (`ecc88f2c99dc2fef3f48da60b5d0d90fd82c47b2` — `feat: harness held-out evaluation dataset`) *
+- **Submitted Commit:** README Commit attached in submitted reportS
 - **Development Record:** See the repository commit history (`git log --oneline`) on the `main` branch, which records the incremental development of the core edit-placement and risk-checking logic, background API worker, content-script review panel, multi-provider options page, study log, evaluation harness, and automated test suites.
 
 ---
