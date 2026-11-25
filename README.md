@@ -7,7 +7,7 @@ A Chrome/Chromium Manifest V3 browser extension that adds a **tracked-changes re
 ## Repository & Development Evidence
 
 - **Public GitHub Repository:** [https://github.com/rafaanshaik05-droid/IIS-A2](https://github.com/rafaanshaik05-droid/IIS-A2)
-- **Submitted Commit:** [`656ec08`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/656ec0804bfcb1f10a3f749d969e617436d613fe) (README commit attached in the submitted report)
+- **Submitted Commit:** Attached in the submitted report
 - **Development Record:** See the structured entries below and the full commit history on `main` ([commits](https://github.com/rafaanshaik05-droid/IIS-A2/commits/main)).
 
 ---
