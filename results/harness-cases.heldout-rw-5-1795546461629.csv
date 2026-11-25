@@ -1,0 +1,114 @@
+case_set,case_id,category,run_ts,prompt_version,provider,model,level,api_tokens_original,api_tokens_rewrite,api_saved_pct,est_saved_pct_default,est_saved_pct_all_changes,edits_proposed,edits_selected,edits_flagged_by_check,edits_normalized,dropped_protected,dropped_unmatched,dropped_noop,dropped_invalid,preserve_checked,schema_ok,clarity,clarity_source,changed,expectation_met,reject_is_best,reject_outcome_ok,must_keep_missing,constraint_words_fewer,checks_total,checks_passed_original,checks_passed_rewrite,review_cost_in,review_cost_out,meaning,constraints,added,answer_a_is,score_a,score_b,better,task_score_original,task_score_rewrite,fault,answer_hallucination,notes,rewrite_text,answer_original,answer_rewrite,error
+cases.heldout,h01,date in another style,2026-11-24T18:51:02.035Z,rw-5,nvidia,nvidia/nemotron-3.5-bolt-e4b,balanced,60,55,8,13,19,2,1,1,0,0,0,0,0,true,true,clear,,true,true,false,,,,2,2,2,660,142,,,,rewrite,,,,,,,,,"Write a short reminder email to my team about the deadline on March 3rd, and keep it friendly? Please make sure it is under 80 words, and please do mention that the meeting room is 4B.","Subject: Friendly Reminder: March 3rd Deadline! 🗓️
+
+Hi Team,
+
+Just a friendly reminder that our deadline is coming up on **March 3rd**! Please ensure all your tasks are completed by then.
+
+We'll be discussing everything in meeting room **4B**.
+
+Let me know if you have any questions or need support to meet this date.
+
+Thanks everyone!","Hi Team,
+
+Just a friendly reminder that the deadline is coming up on **March 3rd**! 🗓️
+
+Please ensure all your submissions are ready by then. We'll be discussing everything in meeting room **4B**.
+
+Let me know if you have any questions or need support!
+
+Best,
+
+[Your Name]",
+cases.heldout,h02,stacked negations,2026-11-24T18:51:07.119Z,rw-5,nvidia,nvidia/nemotron-3.5-bolt-e4b,balanced,50,44,12,12,12,1,1,0,0,0,0,0,0,true,true,clear,,true,true,false,,,,2,2,2,650,103,,,,original,,,,,,,,,"Dinner ideas for tonight: No meat, no fish, nothing spicy, and only things that take under 30 minutes to cook. Give me four options in a list.","Here are four dinner ideas that are meat-free, fish-free, not spicy, and take under 30 minutes to cook:
+
+1. **Quick Tomato & Spinach Pasta:** Cook your favorite pasta (about 10-12 minutes). While it cooks, sauté some garlic in olive oil, add a can of crushed tomatoes, and stir in fresh spinach until wilted. Toss with the drained pasta and a sprinkle of Parmesan cheese (optional).
+2. **Hummus & Veggie Wrap:** Spread hummus on a whole wheat tortilla. Layer with pre-sliced cucumber, shredded carrots, bell pepper strips, and a handful of mixed greens. Roll up and slice. (Minimal cooking time, mostly assembly).
+3. **Garlic Butter Tofu/Paneer with Steamed Veggies:** Cube firm tofu or paneer. Sauté quickly in a pan with olive oil, garlic, and a touch of butter until lightly golden (about 10-15 minutes). Serve alongside quickly steamed broccoli or green beans (5-7 minutes).
+4. **Avocado Toast with Feta & Tomato:** Toast two slices of bread. Mash or slice avocado on top. Top with sliced fresh tomatoes and crumbled feta cheese. Drizzle with a little olive oil and a pinch of salt/pepper. (Under 10 minutes).","Here are four dinner options that are meat-free, fish-free, not spicy, and take under 30 minutes to cook:
+
+1. **Quick Tomato & Basil Pasta:** Cook your favorite pasta (penne, spaghetti, etc.). While it cooks, heat up a jar of simple marinara sauce (ensure it's not spicy). Toss with fresh basil and top with Parmesan cheese.
+2. **Hummus & Veggie Wrap:** Spread hummus on a whole wheat tortilla. Layer with pre-sliced cucumber, shredded carrots, spinach, and bell pepper strips. Roll up and serve immediately.
+3. **Scrambled Tofu with Toast:** Crumble firm tofu into a pan with a splash of soy sauce (or nutritional yeast for cheesy flavor) and a pinch of turmeric (for color, not heat). Sauté until heated through (about 10-15 minutes). Serve with toasted whole-grain bread.
+4. **Garlic Butter Sautéed Zucchini & Rice:** Microwave or quickly cook pre-cooked rice. While that heats, sauté sliced zucchini in a pan with olive oil, minced garlic, and a pat of butter until tender-crisp (about 10-15 minutes). Serve the zucchini over the rice.",
+cases.heldout,h03,name and quote,2026-11-24T18:51:16.671Z,rw-5,nvidia,nvidia/nemotron-3.5-bolt-e4b,balanced,53,48,9,14,14,1,1,0,0,0,0,0,0,true,true,clear,,true,true,false,,,,1,1,1,653,137,,,,original,,,,,,,,,"Check if this sentence sounds natural for an email to Dr. Okafor: ""I look forward to hearing from you at your earliest convenience."" Just tell me yes or no, and one reason.",Yes. It is a polite and professional closing for an email to a doctor.,"Yes. It is a standard, polite, and professional closing for an email to a doctor.",
+cases.heldout,h04,dangling reference,2026-11-24T18:51:19.950Z,rw-5,nvidia,nvidia/nemotron-3.5-bolt-e4b,balanced,12,12,0,0,0,0,0,0,0,0,0,0,0,true,true,unclear,rule,false,true,false,,,,0,0,0,612,61,,,,original,,,,,,,,,Fix this.,"Please provide the text, code, image, or whatever it is you would like me to fix! 😊
+
+**I need something to work on.**
+
+For example, tell me:
+
+* **""Fix this sentence: 'The cat sat on the mat very happy.'""** (I'll fix grammar/flow)
+* **""Fix this Python code: [paste code]""** (I'll fix bugs/improve efficiency)
+* **""Fix this paragraph to sound more professional.""** (I'll adjust tone)
+* **""Fix this image by [describe what needs fixing].""** (If you can describe the issue, I can give advice or generate a corrected version if possible)
+
+**Once you give me the input, I'll do my best to fix it!**",,
+cases.heldout,h05,rejecting is best,2026-11-24T18:51:25.881Z,rw-5,nvidia,nvidia/nemotron-3.5-bolt-e4b,balanced,54,50,7,9,9,1,1,0,0,0,0,0,0,true,true,clear,,true,false,true,false,,,2,0,0,654,109,,,,rewrite,,,,,,,,,"12 June to 15 June, 2 adults, 1 child aged 6, budget under £300 per night, no hostels. Suggest three areas of Lisbon to stay in.","Here are three suggested areas in Lisbon that fit your criteria (no hostels, under £300/night for 2 adults and 1 child aged 6, for June 12-15):
+
+1. **Baixa/Chiado:**
+    * **Vibe:** Central, historic, very walkable, excellent access to transport (metro, trams). This is the heart of commercial and cultural Lisbon.
+    * **Why it works:** You'll find many well-located 3-star and boutique hotels or serviced apartments here that fit the budget, especially if you book slightly outside the absolute peak tourist spots within Baixa.
+    * **Good for:** First-time visitors who want everything within easy reach.
+
+2. **Príncipe Real / Bairro Alto (Edges):**
+    * **Vibe:** Chic, upscale, beautiful architecture, great dining, slightly more residential than Baixa but still central. Bairro Alto gets lively at night, but Príncipe Real is calmer.
+    * **Why it works:** While some places here are expensive, looking slightly off the main thoroughfares in Príncipe Real can yield lovely, family-friendly apartments or smaller hotels within budget.
+    * **Good for:** A slightly more stylish, atmospheric stay with good evening options.
+
+3. **Avenidas Novas / Saldanha:**
+    * **Vibe:** More modern, business-oriented, but very well-connected and quieter than Baixa. It offers a good mix of modern amenities and easy access to central sights via metro.
+    * **Why it works:** Because it's less of a ""tourist hotspot,"" you often get better value for money on quality apartments or mid-range hotels here compared to the hyper-central areas.
+    * **Good for:** Families prioritizing easy transport, comfort, and a slightly less overwhelming central experience.
+
+***
+
+**💡 Booking Tip for June:** June is a popular month. To stay under £300/night for a family of three, I strongly recommend looking at **Apartment Rentals (via Airbnb/Vrbo)** rather than traditional hotels. Apartments offer more space for a child and often provide kitchen facilities, which helps manage food costs.
+
+**Actionable Next Step:** Use booking platforms and filter by:
+* **Dates:** June 12 - June 15
+* **Guests:** 3 (2 adults, 1 child)
+* **Max Price:** £300/night
+* **Property Type:** Apartment or Hotel (Exclude ""Hostel"")
+* **Areas:** Baixa, Príncipe Real, Avenidas Novas
+
+*Please note: Actual availability and pricing change daily, so immediate booking is recommended for June.*","Given your dates (June 12th - 15th), party size (2 adults, 1 child aged 6), budget (under £300 per night), and preference (no hostels), here are three excellent areas in Lisbon to consider, depending on the vibe you prefer:
+
+### 1. Baixa / Chiado (Central & Convenient)
+* **Vibe:** Central, sophisticated, walkable, excellent for first-time visitors.
+* **Pros:** Everything is within easy reach (Trams, Metro, major sights like Praça do Comércio, Elevador de Santa Justa). Many mid-range boutique hotels or serviced apartments fit the budget here.
+* **Cons:** Can be very busy and tourist-heavy, less ""local"" feel than other areas.
+* **Best for:** Ease of access, sightseeing focus.
+
+### 2. Príncipe Real / Estrela (Chic & Relaxed)
+* **Vibe:** Elegant, leafy, upscale but still comfortable, great for strolling.
+* **Pros:** Beautiful architecture, lovely parks (Estrela Basilica/Park), excellent local cafes, slightly quieter than Baixa but still very central. You can find charming 2-bedroom apartments here within budget.
+* **Cons:** Accommodation might lean slightly higher end, so booking early is key to staying under £300.
+* **Best for:** A blend of elegance, comfort, and a slightly calmer atmosphere.
+
+### 3. Alfama / Graça (Authentic & Atmospheric)
+* **Vibe:** Historic, traditional Lisbon, winding medieval streets, authentic local life.
+* **Pros:** Unbeatable atmosphere, close to Fado houses, excellent value for traditional apartments (often with character). Graça is slightly more residential and less steep than deep Alfama.
+* **Cons:** Can be very hilly (requires good walking shoes), less modern infrastructure (e.g., fewer large supermarkets immediately nearby).
+* **Best for:** Immersing yourselves in old Lisbon, atmosphere over modern convenience.
+
+***
+
+### 💡 Booking Tip for Your Budget:
+For a family of three under £300/night, **look for serviced apartments (via Airbnb, Booking.com apartments, etc.) rather than traditional hotels.** This gives you the space (separate sleeping areas for the child) and kitchen facilities, which saves significantly on breakfast costs.
+
+**Recommendation based on a family with a 6-year-old:**
+* **If convenience is #1:** Baixa/Chiado
+* **If atmosphere/culture is #1:** Graça (near Alfama)
+* **If a balance of charm and comfort is #1:** Príncipe Real
+
+**Action:** Check availability in these three areas on your preferred booking site immediately, as June is a very popular time in Lisbon!",
+cases.heldout,h06,long polite padding,2026-11-24T18:51:46.638Z,rw-5,nvidia,nvidia/nemotron-3.5-bolt-e4b,balanced,83,65,22,25,48,4,3,0,0,0,0,0,0,true,true,clear,,true,true,false,,,,2,2,2,683,249,,,,original,,,,,,,,,"I have been thinking, and I would very much like it if you could kindly give me a brief, simple explanation of how vaccines train the immune system. a ten-year-old could understand, and not longer than about 120 words, if that is okay. ","Imagine your immune system is like a security team for your body. When a germ (like a virus) tries to sneak in, the security team needs to know what it looks like to fight it.
+
+A vaccine is like a ""wanted poster"" or a harmless practice drill of the germ. It shows your immune system what the bad guy looks like *without* making you sick. Your security team learns to recognize it and builds special ""memory cells.""
+
+If the real, dangerous germ ever shows up later, your immune system instantly recognizes it and fights it off quickly and strongly, often before you even feel sick! It's like practice so you're ready for the real thing.","Imagine your body has a security team (your immune system) that needs to learn how to fight bad guys, like germs that cause sickness.
+
+A vaccine is like a ""wanted poster"" or a tiny, safe practice version of the germ, not the real, dangerous one. When you get a vaccine, your security team sees this safe practice germ. They learn exactly what it looks like and how to fight it, building up ""memory cells.""
+
+If the *real* germ ever tries to attack later, your immune system already knows how to fight it super fast, stopping you from getting seriously sick! It's like a quick training session so you're ready for the real challenge.",
