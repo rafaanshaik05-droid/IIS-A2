@@ -6,7 +6,7 @@
 
   // Hosts verified with SITE_TESTS.md. Add a host here, and to the README table, only after it passes.
   // On any other site the extension edits only the box the user has clicked into.
-  const TESTED_HOSTS = [];
+  const TESTED_HOSTS = ["https://chatgpt.com/"];
   const tierFor = (host) => (TESTED_HOSTS.some((h) => host === h || host.endsWith("." + h)) ? "tested" : "best_effort");
 
   const estTokens = (s) => Math.ceil(s.length / 4); // rough: about 4 characters per token
