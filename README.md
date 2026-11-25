@@ -66,6 +66,7 @@ A Chrome/Chromium Manifest V3 browser extension that adds a **tracked-changes re
 | `harness.html` / `harness.js` | Evaluation harness for running fixed test cases and exporting scored results |
 | `cases.json` / `cases.heldout.json` | 16 development cases and 6 held-out evaluation cases |
 | `tests/` | Automated Node.js test suites (`options`, `shared`, `rules`, `background`, `no-test-data`, `content`) |
+| `results/` | 'harness-cases.heldout-rw-5-1795546461629.csv'|
 
 ---
 
