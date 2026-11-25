@@ -1,12 +1,33 @@
 # Prompt Review
 
+**Prose word count:** ~1,140 words (excluding code blocks and tables)
+
 A Chrome/Chromium Manifest V3 browser extension that adds a **tracked-changes review step** (`Alt+Shift+R` or extension toolbar icon) to chatbot prompt boxes before you send a prompt. It proposes shorter, clearer edits while preserving formatting and important details, and lets you inspect, toggle, accept, or undo every change.
 
 ## Repository & Development Evidence
 
 - **Public GitHub Repository:** [https://github.com/rafaanshaik05-droid/IIS-A2](https://github.com/rafaanshaik05-droid/IIS-A2)
-- **Submitted Commit:** README Commit attached in submitted reportS
-- **Development Record:** See the repository commit history (`git log --oneline`) on the `main` branch, which records the incremental development of the core edit-placement and risk-checking logic, background API worker, content-script review panel, multi-provider options page, study log, evaluation harness, and automated test suites.
+- **Submitted Commit:** [`656ec08`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/656ec0804bfcb1f10a3f749d969e617436d613fe) (README commit attached in the submitted report)
+- **Development Record:** See the structured entries below and the full commit history on `main` ([commits](https://github.com/rafaanshaik05-droid/IIS-A2/commits/main)).
+
+---
+
+## Development Record
+
+1. **Core edit placement, preservation rules, and ChatGPT DOM verification** — [`48ebba7`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/48ebba7), [`c083245`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/c083245), [`1e4a789`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/1e4a789), [`2d526e2`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/2d526e2)
+   - **What changed:** Built the edit-placement and protected-region engine (`shared.js`), the service worker API caller and JSON schema validator (`background.js`), the in-page tracked-changes review panel (`content.js`), and updated `TESTED_HOSTS` in `shared.js` (`2d526e2`).
+   - **Why:** To propose concise prompt rewrites without altering fenced code, inline code, tables, indentation, or quotes, and to restrict fallback chatbox selection to hosts whose DOM selectors have been verified live.
+   - **How checked:** Verified with `tests/shared.test.js` (23 tests) and `tests/content.test.js` (16 tests in a `jsdom` simulated DOM), plus live testing on `chatgpt.com` and `chat.openai.com`.
+
+2. **Multi-provider support, header-only API keys, and two-click loss confirmation** — [`fadc0fb`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/fadc0fb), [`fec6413`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/fec6413), [`8846248`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/8846248)
+   - **What changed:** Added isolated per-provider settings for NVIDIA NIM, Google Gemini, and custom OpenAI-compatible endpoints (`fadc0fb`), and replaced the hard must-keep block with a two-click confirmation (**Accept rewrite** → **Accept again**) alongside date-style normalization and endpoint host attribution (`fec6413`).
+   - **Why:** To ensure switching providers never sends one provider's key to another, API keys stay in request headers and are scrubbed from errors, and users can intentionally override a preservation warning without silent detail loss.
+   - **How checked:** Verified with `tests/options.test.js` (5 tests) and `tests/background.test.js` (17 tests covering header-only key transmission, error scrubbing, and provider switching).
+
+3. **Evaluation harness, held-out dataset, and anti-leakage guard** — [`6725dc7`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/6725dc7), [`8ffc44e`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/8ffc44e), [`52488d0`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/52488d0), [`ecc88f2`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/ecc88f2)
+   - **What changed:** Added separate development (`cases.json`, 16 cases) and held-out (`cases.heldout.json`, 6 cases) evaluation sets with CSV export (`6725dc7`, `ecc88f2`), rule tests (`52488d0`), and `tests/no-test-data.test.js` (`8ffc44e`).
+   - **Why:** To prevent test-case wording or `must_keep` strings from leaking into product code (`shared.js`, `background.js`, `content.js`, `options.js`) and to keep held-out evaluation cases uncontaminated.
+   - **How checked:** Verified via `npm test` (`tests/rules.test.js`: 12 tests; `tests/no-test-data.test.js`: 1 test; 74 tests passing overall).
 
 ---
 
@@ -28,7 +49,7 @@ A Chrome/Chromium Manifest V3 browser extension that adds a **tracked-changes re
   - By default (`storeText: false`), only counts, token estimates, preservation warnings, and user decisions are logged in `chrome.storage`.
   - Supports exporting the study log to CSV and clearing all stored log data.
 - **Supported Chatbot Sites (`manifest.json`, best effort):**
-  - `chatgpt.com`, `chat.openai.com`,(verified live) `claude.ai`, `gemini.google.com`, `copilot.microsoft.com`, `www.perplexity.ai`, `grok.com`, `chat.deepseek.com`, `chat.mistral.ai`, and `poe.com` (configured in manifest.json on a best effort basis; not yet verified live).
+  - `chatgpt.com`, `chat.openai.com` (verified live); `claude.ai`, `gemini.google.com`, `copilot.microsoft.com`, `www.perplexity.ai`, `grok.com`, `chat.deepseek.com`, `chat.mistral.ai`, and `poe.com` (configured in `manifest.json` on a best-effort basis; not yet verified live).
 
 ---
 
@@ -85,12 +106,16 @@ Open **Options → Open the test harness** (`harness.html`) to run the fixed **D
 
 ## Use of AI
 
-AI tools were used in two parts of this project:
+**Claude (Anthropic)** was used in two parts of this project:
 
-1. **Developing the prototype:** AI was used to assist with drafting, iterating on, and debugging the extension code, provider integrations, evaluation harness, and automated tests.
-2. **Preparing the report:** AI was used to assist with structuring, drafting, and refining the written report and this `README.md`.
+1. **Developing the prototype:** Assisted with drafting, iterating on, and debugging the extension modules (`shared.js`, `content.js`, `background.js`, `providers.js`), the evaluation harness (`harness.js`), and the Node.js test suites.
+2. **Preparing the report:** Assisted with structuring, drafting, and refining the written report and this `README.md`.
 
-**Verification and changes made:** All AI-assisted code, design choices, and written claims were reviewed against the actual implementation. Code changes were verified by running the `npm test` suite (all 74 tests passing) and testing the extension's UI and provider behavior, with manual edits made where needed to correct inaccuracies, enforce privacy/security constraints (such as header-only API keys and error scrubbing), and ensure the documentation accurately reflects the submitted system.
+**What was checked and changed:**
+- **Removed hardcoded must-keep test strings:** Checked `shared.js` to ensure must-keep details are extracted dynamically from the user's prompt rather than from test data, and added `tests/no-test-data.test.js` ([`8ffc44e`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/8ffc44e)) to fail the build if any 6-word test-case phrase or `must_keep` string appears in product code.
+- **Verified ChatGPT DOM selectors:** Tested chatbox detection live on `chatgpt.com` and `chat.openai.com` and updated `TESTED_HOSTS` in `shared.js` ([`2d526e2`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/2d526e2)) so unverified sites require explicit user focus rather than guessing a text box.
+- **Enforced header-only API keys & error scrubbing:** Checked `background.js` and `providers.js` with `tests/background.test.js` ([`8846248`](https://github.com/rafaanshaik05-droid/IIS-A2/commit/8846248)) to confirm API keys are sent only in request headers, remain isolated per provider, and are scrubbed from any error messages before logging or display.
+- **Verified all reported metrics:** Re-ran `npm test` (74/74 passing) and checked dataset counts (16 development cases, 6 held-out cases) against the repository files.
 
 ---
 
